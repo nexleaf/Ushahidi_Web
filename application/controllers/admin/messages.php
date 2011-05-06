@@ -281,7 +281,8 @@ class Messages_Controller extends Admin_Controller
                 {
                     // Yes! Replyto Exists
                     // This is the message we're replying to
-                    $sms_to = intval($reply_to->message_from);
+                    //$sms_to = intval($reply_to->message_from);
+                    $sms_to = $reply_to->message_from;
 
                     // Load Users Settings
                     $settings = new Settings_Model(1);
@@ -303,7 +304,7 @@ class Messages_Controller extends Admin_Controller
                         {
                             $sms_from = "000";      // User needs to set up an SMS number
                         }
-
+			
                         // Send Message
 						$response = sms::send($sms_to, $sms_from, $post->message);
 
