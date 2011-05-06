@@ -253,7 +253,7 @@ class Imap_Core {
 					foreach($structure->parts[$i]->parameters as $object) {
 						if(strtolower($object->attribute) == 'name') {
 							$attachments[$i]['is_attachment'] = true;
-							$attachments[$i]['name'] = $object->value;
+							$attachments[$i]['file_name'] = $object->value;
 						}
 					}
 				}
