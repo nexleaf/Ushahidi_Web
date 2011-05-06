@@ -206,10 +206,10 @@
 			
 			// Handles the tab functionality for the map, images, and video content
 			$('a.tab-item').click(function(){
-				$('a.tab-item').parent().removeClass("report-tab-selected");  // first remove the "selected" class from everything
-				$(this).parent().addClass("report-tab-selected");             // now add it back to the parent of the element which was clicked
-				$('.report-media-box-content > div').hide();                  // then hide all tab content boxes
-				$($(this).attr("href")).show();                               // finally, show the appropriate tab content boxes
+				//$('a.tab-item').parent().removeClass("report-tab-selected");  // first remove the "selected" class from everything
+				//$(this).parent().addClass("report-tab-selected");             // now add it back to the parent of the element which was clicked
+				//$('.report-media-box-content > div').hide();                  // then hide all tab content boxes
+				//$($(this).attr("href")).show();                               // finally, show the appropriate tab content boxes
 				return false;                                                 // stop the browser from jumping back to the top of the page
 			});
 
@@ -239,11 +239,11 @@
 						$('a.smaller-map').parent().show();
 						break;
 					case "smaller-map":
-						$('.report-map').hide().prependTo($('.report-media-box-content'));
+						$('.report-map').hide().prependTo($('.report-media-box-content-map'));
 						$('.map-holder').css({"height":"350px", "width": "348px"});
 						$('a.wider-map').parent().show();
-						$('a.tab-item').parent().removeClass("report-tab-selected");
-						$('.report-media-box-content > div').hide(); // hide everything incase video/images were showing
+						//$('a.tab-item').parent().removeClass("report-tab-selected");
+						//$('.report-media-box-content > div').hide(); // hide everything incase video/images were showing
 						$('a[href=#report-map]').parent().addClass('report-tab-selected').show();
 						$('.report-map').show();
 						break;

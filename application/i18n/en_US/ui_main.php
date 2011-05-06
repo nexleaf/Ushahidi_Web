@@ -374,7 +374,7 @@
 	'report_edit_dropdown_2_item_6' => 'I do not know',
 	'report_edit_dropdown_2_title' => 'Information Probability',
 	'report_option_1' => 'By sending a message to',
-	'report_option_2' => 'By sending an email to ',
+	'report_option_2' => 'By sending an email or MMS to ',
 	'report_option_3' => 'By sending a tweet with the hashtag/s',
 	'report_option_4' => 'By filling this form',
 	'report_saved' => 'Your Report Has Been Saved',

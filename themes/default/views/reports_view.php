@@ -124,17 +124,11 @@
 
 		<div class="report-media-box-tabs">
 			<ul>
-				<li class="report-tab-selected"><a class="tab-item" href="#report-map"><?php echo Kohana::lang('ui_main.map');?></a></li>
-				<?php if( count($incident_photos) > 0 ) { ?>
-					<li><a class="tab-item" href="#report-images"><?php echo Kohana::lang('ui_main.images');?></a></li>
-				<?php } ?>
-				<?php if( count($incident_videos) > 0 ) { ?>
-					<li><a class="tab-item" href="#report-video"><?php echo Kohana::lang('ui_main.video');?></a></li>
-				<?php } ?>
+				<li class="report-tab-selected"><a href="#report-map"><?php echo Kohana::lang('ui_main.map');?></a></li>
 			</ul>
 		</div>
 		
-		<div class="report-media-box-content">
+		<div class="report-media-box-content-map">
 			
 			<div id="report-map" class="report-map">
 				<div class="map-holder" id="map"></div>
@@ -146,10 +140,17 @@
         </ul>
         <div style="clear:both"></div>
 			</div>
+		</div>
 			
 			<!-- start images -->
 			<?php if( count($incident_photos) > 0 ) { ?>
-				<div id="report-images" style="display:none;">
+		<div class="report-media-box-tabs">
+			<ul>
+					<li class="report-tab-selected"><a class="tab-item" href="#report-images"><?php echo Kohana::lang('ui_main.images');?></a></li>
+			</ul>
+		</div>
+		<div class="report-media-box-content">
+				<div id="report-images">
 						<?php
 						foreach ($incident_photos as $photo)
 						{
@@ -159,12 +160,19 @@
 						}
 						?>
 				</div>
+		</div>
 			<?php } ?>
 			<!-- end images -->
 			
 			<!-- start videos -->
 			<?php if( count($incident_videos) > 0 ) { ?>
-				<div id="report-video" style="display:none;">
+		<div class="report-media-box-tabs">
+			<ul>
+					<li class="report-tab-selected"><a class="tab-item" href="#report-videos"><?php echo Kohana::lang('ui_main.video');?></a></li>
+			</ul>
+		</div>
+		<div class="report-media-box-content">
+				<div id="report-videos">
 					<?php
 						// embed the video codes
 						foreach( $incident_videos as $incident_video) {
@@ -172,10 +180,11 @@
 						}
 					?>
 				</div>
+		</div>
 			<?php } ?>
 			<!-- end videos -->
+		<br>
 		
-		</div>
 		<div class="report-additional-reports">
 			<h4><?php echo Kohana::lang('ui_main.additional_reports');?></h4>
 			<?php foreach($incident_neighbors as $neighbor) { ?>
