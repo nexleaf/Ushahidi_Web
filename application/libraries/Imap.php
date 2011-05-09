@@ -84,28 +84,38 @@ class Imap_Core {
 			return array();
 		}
 
-		$no_of_msgs = imap_num_msg($this->imap_stream);
+		//$no_of_msgs = imap_num_msg($this->imap_stream);
+		$new_msgs = imap_search($this->imap_stream, 'UNSEEN');
 		$max_imap_messages = Kohana::config('email.max_imap_messages');
+
+		$messages = array();
+
+		if ($new_msgs == null) {
+		  return $messages;
+		}
 
 		// Check to see if the number of messages we want to sort through is greater than
 		//   the number of messages we want to allow. If there are too many messages, it
 		//   can fail and that's no good.
-		$msg_to_pull = $no_of_msgs;
+		$msg_to_pull = sizeof($new_msgs);
 		
-		//** Disabled this config setting for now - causing issues **
-		//if($msg_to_pull > $max_imap_messages){
-		//	$msg_to_pull = $max_imap_messages;
-		//}
+		if($msg_to_pull > $max_imap_messages){
+			$msg_to_pull = $max_imap_messages;
+		}
 
-		$messages = array();
-
-		for ($msgno = 1; $msgno <= $msg_to_pull; $msgno++)
+		//for ($msgno = 1; $msgno <= $msg_to_pull; $msgno++)
+		for ($msgidx = 0; $msgidx < $msg_to_pull; $msgidx++)
 		{
+		  $msgno = $new_msgs[$msgidx];
 			$header = imap_headerinfo($this->imap_stream, $msgno);
 
 			if( ! isset($header->message_id) OR ! isset($header->udate))
 			{
 				continue;
+			}
+
+			if ($header->Unseen != 'U' AND $header->Recent != 'N') {
+			  continue;
 			}
 
 			$message_id = $header->message_id;
@@ -166,8 +176,11 @@ class Imap_Core {
 			$attachments = $this->_extract_attachments($this->imap_stream, $msgno);
 
 			// Convert to valid UTF8
-			$body = htmlentities($body,NULL,mb_detect_encoding($body, "auto"));
-			$subject = htmlentities(strip_tags($subject),NULL,'UTF-8');
+			//$body = htmlentities($body,NULL,mb_detect_encoding($body, "auto"));
+			//$subject = htmlentities(strip_tags($subject),NULL,'UTF-8');
+			$body = htmlentities($body);
+			$subject = htmlentities(strip_tags($subject));
+
 
 			array_push($messages, array('message_id' => $message_id,
 										'date' => $date,
@@ -235,16 +248,18 @@ class Imap_Core {
 
 				$attachments[$i] = array(
 					'is_attachment' => false,
-					'file_name' => '',
-					'name' => '',
+					'type' => 0,
+					'subtype' => '',
 					'attachment' => ''
 				);
+
+				$attachments[$i]['type'] = $structure->parts[$i]->type;
+				$attachments[$i]['subtype'] = $structure->parts[$i]->subtype;					
 
 				if($structure->parts[$i]->ifdparameters) {
 					foreach($structure->parts[$i]->dparameters as $object) {
 						if(strtolower($object->attribute) == 'filename') {
 							$attachments[$i]['is_attachment'] = true;
-							$attachments[$i]['file_name'] = $object->value;
 						}
 					}
 				}
@@ -253,7 +268,6 @@ class Imap_Core {
 					foreach($structure->parts[$i]->parameters as $object) {
 						if(strtolower($object->attribute) == 'name') {
 							$attachments[$i]['is_attachment'] = true;
-							$attachments[$i]['file_name'] = $object->value;
 						}
 					}
 				}
@@ -275,11 +289,19 @@ class Imap_Core {
 		$valid_attachments = array();
 		foreach ($attachments as $attachment)
 		{
-			$file_name = $attachment['file_name'];
 			$file_content = $attachment['attachment'];
-			$file_type = strrev(substr(strrev($file_name),0,4));
+			if (strlen($file_content) < 12500) {
+				continue;
+			}
+			$file_type = $attachment['type'];
+			$file_extension = $attachment['subtype'];
+			if ($file_extension == 'JPEG') {
+			  $file_extension = '.JPG';
+			} else {
+			  $file_extension = '.' . $file_extension;
+			}
 			$new_file_name = time()."_".$this->_random_string(10); // Included rand so that files don't overwrite each other
-			$valid_attachments[] = $this->_save_attachments($file_type, $new_file_name, $file_content);
+			$valid_attachments[] = $this->_save_attachments($file_type, $new_file_name, $file_extension, $file_content);
 		}
 
 		// Remove Nulls
@@ -291,36 +313,35 @@ class Imap_Core {
 	 * Save Attachments to Upload Folder
 	 * Right now we only accept gif, png and jpg files
 	 */	
-	private function _save_attachments($file_type,$file_name,$file_content)
+	private function _save_attachments($file_type,$file_name,$file_extension,$file_content)
 	{
-		if ($file_type == ".gif"
-			OR $file_type == ".png"
-			OR $file_type == ".jpg")
+	  // $file_type == 5 is image, == 6 is video...  see:
+	  // http://us.php.net/manual/en/function.imap-fetchstructure.php
+	  if ($file_type == 5)
 		{
 			$attachments = array();
-			$file = Kohana::config("upload.directory")."/".$file_name.$file_type;
+			$file = Kohana::config("upload.directory")."/".$file_name.$file_extension;
 			$fp = fopen($file, "w");
 			fwrite($fp, $file_content);
 			fclose($fp);
 			
 			// IMAGE SIZES: 800X600, 400X300, 89X59
-			
 			// Large size
 			Image::factory($file)->resize(800,600,Image::AUTO)
-				->save(Kohana::config('upload.directory', TRUE).$file_name.$file_type);
+				->save(Kohana::config('upload.directory', TRUE).$file_name.$file_extension);
 
 			// Medium size
 			Image::factory($file)->resize(400,300,Image::HEIGHT)
-				->save(Kohana::config('upload.directory', TRUE).$file_name."_m".$file_type);
+				->save(Kohana::config('upload.directory', TRUE).$file_name."_m".$file_extension);
 			
 			// Thumbnail
 			Image::factory($file)->resize(89,59,Image::HEIGHT)
-				->save(Kohana::config('upload.directory', TRUE).$file_name."_t".$file_type);
+				->save(Kohana::config('upload.directory', TRUE).$file_name."_t".$file_extension);
 				
 			$attachments[] = array(
-					$file_name.$file_type,
-					$file_name."_m".$file_type,
-					$file_name."_t".$file_type
+					$file_name.$file_extension,
+					$file_name."_m".$file_extension,
+					$file_name."_t".$file_extension
 				);
 			return $attachments;
 		}
